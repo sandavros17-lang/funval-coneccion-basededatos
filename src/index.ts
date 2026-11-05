@@ -1,7 +1,7 @@
 import express, { type Request, type Response } from "express";
 import swaggerRouter from "./routes/swagger.router.js";
 import cors from "cors";
-import productRoutes from "./routes/product.routes"; // 1. Importar las rutas de productos
+import productRoutes from "./routes/product.routes.js"; // 1. Importar las rutas de productos
 
 const port = process.env.PORT;
 const app = express();

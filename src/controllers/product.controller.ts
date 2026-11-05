@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import * as productModel from "../models/product.model";
+import * as productModel from "../models/product.model.js";
 
 export const getMenu = async (req: Request, res: Response): Promise<void> => {
   /* #swagger.tags = ['Products']
@@ -8,8 +8,9 @@ export const getMenu = async (req: Request, res: Response): Promise<void> => {
     const products = await productModel.getAllProducts();
     res.json(products);
   } catch (error) {
-    res.status(500).json({ error: "Error interno del servidor al obtener el menú" });
-  }
+  console.error("Error detallado:", error);
+  res.status(500).json({ error: "Error interno del servidor al obtener el menú" });
+}
 };
 
 export const getProduct = async (req: Request, res: Response): Promise<void> => {
@@ -32,8 +33,8 @@ export const createProduct = async (req: Request, res: Response): Promise<void> 
   /* #swagger.tags = ['Products']
      #swagger.summary = 'Crear un nuevo producto' */
   try {
-    const { name, description, price } = req.body;
-    const newProduct = await productModel.insertProduct(name, description, price);
+    const { nombre, descripcion, precio } = req.body;
+    const newProduct = await productModel.insertProduct(nombre, descripcion, precio);
     res.status(201).json(newProduct);
   } catch (error) {
     res.status(500).json({ error: "Error al crear el producto" });
@@ -45,8 +46,8 @@ export const updateProduct = async (req: Request, res: Response): Promise<void> 
      #swagger.summary = 'Actualizar un producto por su ID' */
   try {
     const id = Number(req.params.id);
-    const { name, description, price } = req.body;
-    const updated = await productModel.updateProduct(id, name, description, price);
+    const { nombre, descripcion, precio } = req.body;
+    const updated = await productModel.updateProduct(id, nombre, descripcion, precio);
     if (!updated) {
       res.status(404).json({ message: "Producto no encontrado" });
       return;
