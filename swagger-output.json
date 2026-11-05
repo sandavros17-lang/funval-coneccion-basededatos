@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "API de Estudiantes",
+    "title": "API de restaurante",
     "description": "Documentación automática generada para el bootcamp",
     "version": "1.0.0"
   },
@@ -53,13 +53,13 @@
             "schema": {
               "type": "object",
               "properties": {
-                "name": {
+                "nombre": {
                   "example": "any"
                 },
-                "description": {
+                "descripcion": {
                   "example": "any"
                 },
-                "price": {
+                "precio": {
                   "example": "any"
                 }
               }
@@ -122,13 +122,13 @@
             "schema": {
               "type": "object",
               "properties": {
-                "name": {
+                "nombre": {
                   "example": "any"
                 },
-                "description": {
+                "descripcion": {
                   "example": "any"
                 },
-                "price": {
+                "precio": {
                   "example": "any"
                 }
               }

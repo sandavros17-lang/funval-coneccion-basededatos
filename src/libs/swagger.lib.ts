@@ -2,7 +2,7 @@ import swaggerAutogen from 'swagger-autogen';
 
 const doc = {
     info: {
-        title: 'API de Estudiantes',
+        title: 'API de restaurante',
         description: 'Documentación automática generada para el bootcamp',
         version: '1.0.0',
     },

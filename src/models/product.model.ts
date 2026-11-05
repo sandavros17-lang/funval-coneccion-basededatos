@@ -1,4 +1,4 @@
-import pool from "../config/db";
+import { pool } from "../config/db.js";
 
 export interface Product {
   id?: number;
@@ -9,13 +9,13 @@ export interface Product {
 
 // Retorna todos los productos
 export const getAllProducts = async (): Promise<Product[]> => {
-  const { rows } = await pool.query("SELECT * FROM products ORDER BY id ASC");
+  const { rows } = await pool.query("SELECT * FROM producto ORDER BY id ASC");
   return rows;
 };
 
 // Retorna un producto por ID o null si no existe
 export const getProductById = async (id: number): Promise<Product | null> => {
-  const { rows } = await pool.query("SELECT * FROM products WHERE id = $1", [id]);
+  const { rows } = await pool.query("SELECT * FROM producto WHERE id = $1", [id]);
   return rows.length ? rows[0] : null;
 };
 
@@ -26,7 +26,7 @@ export const insertProduct = async (
   price: number
 ): Promise<Product> => {
   const { rows } = await pool.query(
-    "INSERT INTO products (name, description, price) VALUES ($1, $2, $3) RETURNING *",
+    "INSERT INTO producto (name, description, price) VALUES ($1, $2, $3) RETURNING *",
     [name, description, price]
   );
   return rows[0];
@@ -40,7 +40,7 @@ export const updateProduct = async (
   price: number
 ): Promise<Product | null> => {
   const { rows } = await pool.query(
-    "UPDATE products SET name = $1, description = $2, price = $3 WHERE id = $4 RETURNING *",
+    "UPDATE producto SET name = $1, description = $2, price = $3 WHERE id = $4 RETURNING *",
     [name, description, price, id]
   );
   return rows.length ? rows[0] : null;
