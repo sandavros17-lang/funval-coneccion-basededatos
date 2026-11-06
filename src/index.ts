@@ -2,6 +2,7 @@ import express, { type Request, type Response } from "express";
 import swaggerRouter from "./routes/swagger.router.js";
 import cors from "cors";
 import productRoutes from "./routes/product.routes.js"; // 1. Importar las rutas de productos
+import clienteRoutes from './routes/cliente.routes.js';
 
 const port = process.env.PORT;
 const app = express();
@@ -12,6 +13,7 @@ app.use(cors());
 
 app.use("/api/docs", swaggerRouter);
 app.use("/api", productRoutes); // 2. Montar el router bajo el prefijo /api
+app.use('/api', clienteRoutes);
 
 app.get("/", (req: Request, res: Response) => {
   /*#swagger.tags = ['Tests']*/
