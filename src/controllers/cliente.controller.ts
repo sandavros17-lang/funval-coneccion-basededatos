@@ -1,59 +1,122 @@
-import type { Request, Response } from 'express';
-import { 
-  getAllClientesModel, 
-  getClienteByIdModel, 
-  createClienteModel, 
-  updateClienteModel 
-} from '../models/cliente.model.js';
+import type { Request, Response } from "express";
+import { pool } from "../config/db.js";
 
-export const getClientes = async (req: Request, res: Response) => {
+export async function getClientes(req: Request, res: Response) {
   try {
-    const clientes = await getAllClientesModel();
-    res.json(clientes);
-  } catch (error) {
-    res.status(500).json({ error: 'Error al obtener los clientes' });
-  }
-};
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const offset = (page - 1) * limit;
 
-export const getClienteById = async (req: Request, res: Response) => {
+    let query = `SELECT * FROM cliente WHERE 1=1`;
+    const params: any[] = [];
+    let paramIndex = 1;
+
+    if (req.query.nombre) {
+      query += ` AND nombre ILIKE $${paramIndex}`;
+      params.push(`%${req.query.nombre}%`);
+      paramIndex++;
+    }
+
+    query += ` LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+    params.push(limit, offset);
+
+    const { rows } = await pool.query(query, params);
+    
+    const countQuery = `SELECT COUNT(*) FROM cliente WHERE 1=1`;
+    const countResult = await pool.query(countQuery);
+    const totalRegistros = parseInt(countResult.rows[0].count, 10);
+    const totalPaginas = Math.ceil(totalRegistros / limit);
+
+    res.json({
+      page,
+      limit,
+      totalRegistros,
+      totalPaginas,
+      data: rows
+    });
+  } catch (error: any) {
+    console.error(error);
+    res.status(500).json({ error: "Error al obtener los clientes", detalles: error.message });
+  }
+}
+
+export async function getClienteById(req: Request, res: Response) {
   try {
     const idParam = req.params.id;
-    const id = parseInt(Array.isArray(idParam) ? idParam[0] ?? '' : idParam ?? '', 10);
-    if (!Number.isInteger(id)) {
-      return res.status(400).json({ error: 'ID de cliente inválido' });
-    }
-    const cliente = await getClienteByIdModel(id);
-    if (!cliente) {
-      return res.status(404).json({ error: 'Cliente no encontrado' });
-    }
-    res.json(cliente);
-  } catch (error) {
-    res.status(500).json({ error: 'Error al obtener el cliente' });
-  }
-};
+    const id = parseInt(Array.isArray(idParam) ? idParam[0] ?? "" : idParam ?? "", 10);
+    const query = `SELECT * FROM cliente WHERE id = $1`;
+    const { rows } = await pool.query(query, [id]);
 
-export const createCliente = async (req: Request, res: Response) => {
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Cliente no encontrado" });
+    }
+
+    res.json(rows[0]);
+  } catch (error: any) {
+    console.error(error);
+    res.status(500).json({ error: "Error al obtener el cliente", detalles: error.message });
+  }
+}
+
+export async function createCliente(req: Request, res: Response) {
   try {
-    const nuevoCliente = await createClienteModel(req.body);
-    res.status(201).json(nuevoCliente);
-  } catch (error) {
-    res.status(500).json({ error: 'Error al crear el cliente' });
+    const { nombre, email, telefono } = req.body;
+    
+    const query = `
+      INSERT INTO cliente (nombre, email, telefono) 
+      VALUES ($1, $2, $3) 
+      RETURNING *
+    `;
+    const { rows } = await pool.query(query, [nombre, email, telefono]);
+    
+    res.status(201).json(rows[0]);
+  } catch (error: any) {
+    console.error(error);
+    res.status(500).json({ error: "Error al crear el cliente", detalles: error.message });
   }
-};
+}
 
-export const updateCliente = async (req: Request, res: Response) => {
+export async function updateCliente(req: Request, res: Response) {
   try {
     const idParam = req.params.id;
-    const id = parseInt(Array.isArray(idParam) ? idParam[0] ?? '' : idParam ?? '', 10);
-    if (!Number.isInteger(id)) {
-      return res.status(400).json({ error: 'ID de cliente inválido' });
+    const id = parseInt(Array.isArray(idParam) ? idParam[0] ?? "" : idParam ?? "", 10);
+    const { nombre, email, telefono } = req.body;
+    
+    const query = `
+      UPDATE cliente 
+      SET nombre = COALESCE($1, nombre), 
+          email = COALESCE($2, email), 
+          telefono = COALESCE($3, telefono) 
+      WHERE id = $4 
+      RETURNING *
+    `;
+    const { rows } = await pool.query(query, [nombre, email, telefono, id]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Cliente no encontrado para actualizar" });
     }
-    const clienteActualizado = await updateClienteModel(id, req.body);
-    if (!clienteActualizado) {
-      return res.status(404).json({ error: 'Cliente no encontrado para actualizar' });
-    }
-    res.json(clienteActualizado);
-  } catch (error) {
-    res.status(500).json({ error: 'Error al actualizar el cliente' });
+
+    res.json(rows[0]);
+  } catch (error: any) {
+    console.error(error);
+    res.status(500).json({ error: "Error al actualizar el cliente", detalles: error.message });
   }
-};
+}
+
+export async function deleteCliente(req: Request, res: Response) {
+  try {
+    const idParam = req.params.id;
+    const id = parseInt(Array.isArray(idParam) ? idParam[0] ?? "" : idParam ?? "", 10);
+    const query = `DELETE FROM cliente WHERE id = $1 RETURNING *`;
+    const { rows } = await pool.query(query, [id]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Cliente no encontrado para eliminar" });
+    }
+
+    res.json({ mensaje: "Cliente eliminado correctamente", cliente: rows[0] });
+  } catch (error: any) {
+    console.error(error);
+    res.status(500).json({ error: "Error al eliminar el cliente", detalles: error.message });
+  }
+}
