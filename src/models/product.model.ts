@@ -1,47 +1,53 @@
 import { pool } from "../config/db.js";
 
-export interface Product {
-  id?: number;
-  name: string;
-  description: string;
-  price: number;
+export interface ProductFilters {
+  nombre?: string;
+  maxPrice?: number;
 }
 
-// Retorna todos los productos
-export const getAllProducts = async (): Promise<Product[]> => {
-  const { rows } = await pool.query("SELECT * FROM producto ORDER BY id ASC");
-  return rows;
-};
+export class ProductModel {
+  static async findAll(limit: number, offset: number, filters?: ProductFilters) {
+    let query = `SELECT * FROM producto WHERE 1=1`;
+    const params: any[] = [];
+    let paramIndex = 1;
 
-// Retorna un producto por ID o null si no existe
-export const getProductById = async (id: number): Promise<Product | null> => {
-  const { rows } = await pool.query("SELECT * FROM producto WHERE id = $1", [id]);
-  return rows.length ? rows[0] : null;
-};
+    if (filters?.nombre) {
+      query += ` AND nombre ILIKE $${paramIndex}`;
+      params.push(`%${filters.nombre}%`);
+      paramIndex++;
+    }
 
-// Inserta un nuevo producto
-export const insertProduct = async (
-  name: string,
-  description: string,
-  price: number
-): Promise<Product> => {
-  const { rows } = await pool.query(
-    "INSERT INTO producto (name, description, price) VALUES ($1, $2, $3) RETURNING *",
-    [name, description, price]
-  );
-  return rows[0];
-};
+    if (filters?.maxPrice !== undefined) {
+      query += ` AND precio <= $${paramIndex}`;
+      params.push(filters.maxPrice);
+      paramIndex++;
+    }
 
-// Actualiza un producto existente por ID o retorna null si no existe
-export const updateProduct = async (
-  id: number,
-  name: string,
-  description: string,
-  price: number
-): Promise<Product | null> => {
-  const { rows } = await pool.query(
-    "UPDATE producto SET name = $1, description = $2, price = $3 WHERE id = $4 RETURNING *",
-    [name, description, price, id]
-  );
-  return rows.length ? rows[0] : null;
-};
+    query += ` LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+    params.push(limit, offset);
+
+    const { rows } = await pool.query(query, params);
+    return rows;
+  }
+
+  static async count(filters?: ProductFilters) {
+    let query = `SELECT COUNT(*) FROM producto WHERE 1=1`;
+    const params: any[] = [];
+    let paramIndex = 1;
+
+    if (filters?.nombre) {
+      query += ` AND nombre ILIKE $${paramIndex}`;
+      params.push(`%${filters.nombre}%`);
+      paramIndex++;
+    }
+
+    if (filters?.maxPrice !== undefined) {
+      query += ` AND precio <= $${paramIndex}`;
+      params.push(filters.maxPrice);
+      paramIndex++;
+    }
+
+    const { rows } = await pool.query(query, params);
+    return parseInt(rows[0].count, 10);
+  }
+}

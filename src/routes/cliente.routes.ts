@@ -1,18 +1,12 @@
-import { Router } from 'express';
-import { 
-  getClientes, 
-  getClienteById, 
-  createCliente, 
-  updateCliente 
-} from '../controllers/cliente.controller.js';
-import { validateSchema } from '../middlewares/validateSchema.js';
-import { clienteSchema, updateClienteSchema } from '../schemas/cliente.schema.js';
+import { Router } from "express";
+import { getClientes, getClienteById, createCliente, updateCliente, deleteCliente } from "../controllers/cliente.controller.js";
 
 const router: Router = Router();
 
-router.get('/customers', getClientes);
-router.get('/customers/:id', getClienteById);
-router.post('/customers', validateSchema(clienteSchema), createCliente);
-router.put('/customers/:id', validateSchema(updateClienteSchema), updateCliente);
+router.get("/", getClientes);
+router.get("/:id", getClienteById);
+router.post("/", createCliente);
+router.put("/:id", updateCliente);
+router.delete("/:id", deleteCliente);
 
 export default router;
